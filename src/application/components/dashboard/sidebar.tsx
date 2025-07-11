@@ -1,6 +1,8 @@
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "../../hooks/useAppSelector"
 import { logoutSuccess } from "../../store/slices/authSlice"
+import { signOut } from 'firebase/auth';
+import { auth } from '../../../persistence/api/firebase';
 import {
   Drawer,
   List,
@@ -23,8 +25,6 @@ import {
   Logout as LogoutIcon,
   Settings as SettingsIcon,
   Help as HelpIcon,
-  Analytics as AnalyticsIcon,
-  Group as TeamIcon,
 } from "@mui/icons-material"
 
 const drawerWidth = 240
@@ -53,9 +53,10 @@ export function Sidebar({ mobileOpen, handleDrawerToggle }: SidebarProps) {
     { name: "Help", href: "/dashboard/help", icon: HelpIcon },
   ]
 
-  const handleLogout = () => {
-    dispatch(logoutSuccess())
-    navigate("/login")
+  const handleLogout = async () => {
+    await signOut(auth);
+    dispatch(logoutSuccess());
+    navigate("/login");
   }
 
   const handleNavigation = (href: string) => {

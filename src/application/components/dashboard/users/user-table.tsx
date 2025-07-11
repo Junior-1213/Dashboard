@@ -30,14 +30,17 @@ import { UserDialog } from "./user-dialog"
 export function UserTable() {
   const dispatch = useAppDispatch()
   const { users, loading } = useAppSelector((state) => state.users)
+  const { user: authUser } = useAppSelector((state) => state.auth)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<string | null>(null)
 
   useEffect(() => {
-    dispatch(fetchUsers())
-  }, [dispatch])
+    if (authUser?.id) {
+      dispatch(fetchUsers(authUser.id))
+    }
+  }, [dispatch, authUser?.id])
 
   const handleEdit = (user: User) => {
     setEditingUser(user)
@@ -50,8 +53,8 @@ export function UserTable() {
   }
 
   const handleDeleteConfirm = () => {
-    if (userToDelete) {
-      dispatch(deleteUser(userToDelete)).then(() => dispatch(fetchUsers()))
+    if (userToDelete && authUser?.id) {
+      dispatch(deleteUser({ ownerId: authUser.id, id: userToDelete })).then(() => dispatch(fetchUsers(authUser.id)))
       setDeleteDialogOpen(false)
       setUserToDelete(null)
     }

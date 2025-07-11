@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppSelector';
 import { loginSuccess, setLoading, setError } from '../store/slices/authSlice';
@@ -14,6 +14,16 @@ const RegisterPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.auth);
+
+  // Limpiar error automáticamente después de 3 segundos
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        dispatch(setError(null));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, dispatch]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +42,8 @@ const RegisterPage: React.FC = () => {
       await updateProfile(user, { displayName: name });
       dispatch(loginSuccess({
         id: user.uid, email: user.email!, name: user.displayName || name,
-        status: ''
+        status: '',
+        ownerId: ''
       }));
       navigate('/');
     } catch (error: any) {

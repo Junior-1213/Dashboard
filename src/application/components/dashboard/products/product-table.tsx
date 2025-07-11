@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useAppDispatch, useAppSelector } from "../../../hooks/useAppSelector"
 import { fetchProducts, deleteProduct } from "../../../store/slices/productSlice"
 import type { Product } from "../../../../domain/productos/objects/product"
@@ -29,15 +29,18 @@ import { ProductDialog } from "./product-dialog"
 
 export function ProductTable() {
   const dispatch = useAppDispatch()
-  const { products, loading } = useAppSelector((state) => state.products)
+  const { products } = useAppSelector((state) => state.products)
+  const { user } = useAppSelector((state) => state.auth)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<string | null>(null)
 
   useEffect(() => {
-    dispatch(fetchProducts())
-  }, [dispatch])
+    if (user?.id) {
+      dispatch(fetchProducts(user.id))
+    }
+  }, [dispatch, user?.id])
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product)
@@ -50,8 +53,8 @@ export function ProductTable() {
   }
 
   const handleDeleteConfirm = () => {
-    if (productToDelete) {
-      dispatch(deleteProduct(productToDelete)).then(() => dispatch(fetchProducts()))
+    if (productToDelete && user?.id) {
+      dispatch(deleteProduct({ userId: user.id, id: productToDelete })).then(() => dispatch(fetchProducts(user.id)))
       setDeleteDialogOpen(false)
       setProductToDelete(null)
     }

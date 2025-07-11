@@ -3,9 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useAppDispatch } from "../../../hooks/useAppSelector"
-import { addProduct, updateProduct } from "../../../store/slices/productSlice"
-import { fetchProducts } from "../../../store/slices/productSlice"
+import { useAppDispatch, useAppSelector } from "../../../hooks/useAppSelector"
+import { addProduct, updateProduct, fetchProducts } from "../../../store/slices/productSlice"
 import type { Product } from "../../../../domain/productos/objects/product"
 import {
   Dialog,
@@ -39,6 +38,7 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
   })
 
   const dispatch = useAppDispatch()
+  const { user } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
     if (product) {
@@ -64,6 +64,7 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user?.id) return;
 
     const productData: Product = {
       id: product?.id || Date.now().toString(),
@@ -77,9 +78,9 @@ export function ProductDialog({ isOpen, onClose, product }: ProductDialogProps) 
     }
 
     if (product) {
-      dispatch(updateProduct(productData)).then(() => dispatch(fetchProducts()))
+      dispatch(updateProduct({ userId: user.id, product: productData })).then(() => dispatch(fetchProducts(user.id)))
     } else {
-      dispatch(addProduct(productData)).then(() => dispatch(fetchProducts()))
+      dispatch(addProduct({ userId: user.id, product: productData })).then(() => dispatch(fetchProducts(user.id)))
     }
 
     onClose()

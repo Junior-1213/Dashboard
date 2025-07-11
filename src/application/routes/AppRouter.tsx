@@ -11,6 +11,8 @@ import DashboardPage from "../containers/DashboardPage";
 import DashboardLayout from "../containers/layout";
 import UsersPage from "../containers/UsersPage";
 import ProductsPage from "../containers/ProductsPage";
+import SettingsPage from "../containers/SettingsPage";
+import HelpPage from "../containers/HelpPage";
 import { useAuth } from "../hooks/useAuth";
 import { CircularProgress, Box } from "@mui/material";
 
@@ -55,6 +57,8 @@ const AppRouter: React.FC = () => {
           <Route index element={<DashboardPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="products" element={<ProductsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="help" element={<HelpPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

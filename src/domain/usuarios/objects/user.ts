@@ -8,4 +8,6 @@ export interface User {
   role?: "admin" | "user";
   /** Fecha de creación en formato ISO */
   createdAt?: string;
+  /** Id del dueño/propietario de la cuenta */
+  ownerId: string;
 }

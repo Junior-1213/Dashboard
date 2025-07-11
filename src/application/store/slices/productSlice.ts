@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { db } from '../../../firebase/firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import type { Product } from '@/domain/productos/objects/product';
+import { addUserProduct, deleteUserProduct, getUserProducts, updateUserProduct } from '../../services/productService';
 
 interface ProductState {
   products: Product[];
@@ -15,30 +14,36 @@ const initialState: ProductState = {
   error: null,
 };
 
-export const fetchProducts = createAsyncThunk('products/fetchProducts', async () => {
-  const querySnapshot = await getDocs(collection(db, 'products'));
-  const products: Product[] = [];
-  querySnapshot.forEach((doc) => {
-    products.push({ id: doc.id, ...doc.data() } as Product);
-  });
-  return products;
-});
+export const fetchProducts = createAsyncThunk<Product[], string>(
+  'products/fetchProducts',
+  async (userId) => {
+    return await getUserProducts(userId);
+  }
+);
 
-export const addProduct = createAsyncThunk('products/addProduct', async (product: Omit<Product, 'id'>) => {
-  const docRef = await addDoc(collection(db, 'products'), product);
-  return { id: docRef.id, ...product } as Product;
-});
+export const addProduct = createAsyncThunk<Product, { userId: string, product: Omit<Product, 'id' | 'userId'> }>(
+  'products/addProduct',
+  async ({ userId, product }) => {
+    const docRef = await addUserProduct(userId, product);
+    return { id: docRef.id, ...product, userId } as Product;
+  }
+);
 
-export const updateProduct = createAsyncThunk('products/updateProduct', async (product: Product) => {
-  const { id, ...data } = product;
-  await updateDoc(doc(db, 'products', id), data);
-  return product;
-});
+export const updateProduct = createAsyncThunk<Product, { userId: string, product: Product }>(
+  'products/updateProduct',
+  async ({ userId, product }) => {
+    await updateUserProduct(userId, product);
+    return product;
+  }
+);
 
-export const deleteProduct = createAsyncThunk('products/deleteProduct', async (id: string) => {
-  await deleteDoc(doc(db, 'products', id));
-  return id;
-});
+export const deleteProduct = createAsyncThunk<string, { userId: string, id: string }>(
+  'products/deleteProduct',
+  async ({ userId, id }) => {
+    await deleteUserProduct(userId, id);
+    return id;
+  }
+);
 
 const productSlice = createSlice({
   name: 'products',

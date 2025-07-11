@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useAppSelector } from "../hooks/useAppSelector"
 import { Box, AppBar, Toolbar, Typography, IconButton, CircularProgress } from "@mui/material"
 import { Menu as MenuIcon } from "@mui/icons-material"
@@ -9,25 +9,30 @@ const drawerWidth = 240
 
 export default function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const { isAuthenticated } = useAppSelector((state) => state.auth)
+  const { isAuthenticated, loading } = useAppSelector((state) => state.auth)
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen)
   }
 
-  if (!isAuthenticated) {
+  if (loading) {
     return (
       <Box
         sx={{
-          minHeight: "100vh",
+          height: "100vh",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          overflow: "hidden",
         }}
       >
         <CircularProgress size={60} />
       </Box>
     )
+  }
+  if (!isAuthenticated) {
+    // No renderizar nada si no está autenticado (la ruta privada ya redirige)
+    return null;
   }
 
   return (
@@ -63,7 +68,8 @@ export default function DashboardLayout() {
         sx={{
           flexGrow: 1,
           width: { md: `calc(100% - ${drawerWidth}px)` },
-          minHeight: "100vh",
+          height: "100vh",
+          overflow: "hidden",
           backgroundColor: "background.default",
           pt: { xs: 7, md: 0 },
         }}

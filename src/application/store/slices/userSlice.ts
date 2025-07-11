@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { db } from '../../../persistence/config/config';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import type { User } from '@/domain/usuarios/objects/user';
+import { getUserUsers, addUserUser, updateUserUser, deleteUserUser } from '../../services/userService';
 
 interface UserState {
   users: User[];
@@ -15,30 +14,36 @@ const initialState: UserState = {
   error: null,
 };
 
-export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
-  const querySnapshot = await getDocs(collection(db, 'users'));
-  const users: User[] = [];
-  querySnapshot.forEach((doc) => {
-    users.push({ id: doc.id, ...doc.data() } as User);
-  });
-  return users;
-});
+export const fetchUsers = createAsyncThunk<User[], string>(
+  'users/fetchUsers',
+  async (ownerId) => {
+    return await getUserUsers(ownerId);
+  }
+);
 
-export const addUser = createAsyncThunk('users/addUser', async (user: Omit<User, 'id'>) => {
-  const docRef = await addDoc(collection(db, 'users'), user);
-  return { id: docRef.id, ...user } as User;
-});
+export const addUser = createAsyncThunk<User, { ownerId: string, user: Omit<User, 'id' | 'ownerId'> }>(
+  'users/addUser',
+  async ({ ownerId, user }) => {
+    const docRef = await addUserUser(ownerId, user);
+    return { id: docRef.id, ...user, ownerId } as User;
+  }
+);
 
-export const updateUser = createAsyncThunk('users/updateUser', async (user: User) => {
-  const { id, ...data } = user;
-  await updateDoc(doc(db, 'users', id), data);
-  return user;
-});
+export const updateUser = createAsyncThunk<User, { ownerId: string, user: User }>(
+  'users/updateUser',
+  async ({ ownerId, user }) => {
+    await updateUserUser(ownerId, user);
+    return { ...user, ownerId };
+  }
+);
 
-export const deleteUser = createAsyncThunk('users/deleteUser', async (id: string) => {
-  await deleteDoc(doc(db, 'users', id));
-  return id;
-});
+export const deleteUser = createAsyncThunk<string, { ownerId: string, id: string }>(
+  'users/deleteUser',
+  async ({ ownerId, id }) => {
+    await deleteUserUser(ownerId, id);
+    return id;
+  }
+);
 
 const userSlice = createSlice({
   name: 'users',

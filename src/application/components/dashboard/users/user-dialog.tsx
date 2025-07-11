@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useAppDispatch } from "../../../hooks/useAppSelector"
+import { useAppDispatch, useAppSelector } from "../../../hooks/useAppSelector"
 import { addUser, updateUser, fetchUsers } from "../../../store/slices/userSlice"
 import type { User } from "../../../../domain/usuarios/objects/user"
 import {
@@ -36,6 +36,7 @@ export function UserDialog({ isOpen, onClose, user }: UserDialogProps) {
   })
 
   const dispatch = useAppDispatch()
+  const { user: authUser } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
     if (user) {
@@ -60,8 +61,12 @@ export function UserDialog({ isOpen, onClose, user }: UserDialogProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const userData: User = {
-      id: user?.id || Date.now().toString(),
+    if (!authUser?.id) {
+      alert('No se encontró el usuario autenticado.');
+      return;
+    }
+
+    const baseUser = {
       name: formData.name,
       email: formData.email,
       role: formData.role,
@@ -70,9 +75,15 @@ export function UserDialog({ isOpen, onClose, user }: UserDialogProps) {
     }
 
     if (user) {
-      dispatch(updateUser(userData)).then(() => dispatch(fetchUsers()))
+      dispatch(updateUser({
+        ownerId: authUser.id,
+        user: { id: user.id, ...baseUser, ownerId: authUser.id },
+      })).then(() => dispatch(fetchUsers(authUser.id)))
     } else {
-      dispatch(addUser(userData)).then(() => dispatch(fetchUsers()))
+      dispatch(addUser({
+        ownerId: authUser.id,
+        user: baseUser,
+      })).then(() => dispatch(fetchUsers(authUser.id)))
     }
 
     onClose()
